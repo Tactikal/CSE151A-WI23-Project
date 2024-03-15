@@ -15,7 +15,7 @@ We were interested in this dataset because it was very robust, and had potential
 
 ## Methods
 
-### Exploration
+### Data Exploration
 
 ### Preprocessing
 To preprocess our data, we begun with imputation to remove meaningless or null entries, and also renamed some labels to make it easier to unify our data. Additionally, we made some slight transforms to the data to further eliminate unnecessary data. We then normalized the data and did a logistic regression using only the numerical data. Further standardization of the normalized numerical data was performed, and another logistic regression was completed to check our results. Finally, we performed both label and one-hot encoding on the categorical variables in our data, and determined that label encoding is a more appropriate approach due to the large number of ordinal categorical features. 
@@ -42,3 +42,11 @@ In conclusion, we did not find significant improvements by using a neural networ
 
 
 ### Third Model
+
+## Results
+
+## Discussion 
+
+## Conclusion 
+
+## Collaboration 
