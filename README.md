@@ -529,6 +529,8 @@ In conclusion, we did not find significant improvements by using a neural networ
 
 ## Conclusion
 
+Overall, we achieved fairly decent accuracy with all three of our models. We utilized multiple methods such as cross-validation, hyperparameter tuning, and oversampling to maximize our models and avoid overfitting or underfitting. Although we attained accuracies between 70% to 80%, we believe that our model could be further improved by trying out additional classification models. Since our models have been for binary classification, in the future, we would like to explore predicting a continuous value for income instead of splitting income into binary classes. In doing so, it would be interesting to investigate data for a specific area of work since our current dataset contains a wide range of occupations, making our data very generalized. More data would be required to further enhance the accuracy of our models. However, the work we have done so far provides a good starting point for us to explore more specialized data.
+
 ## Collaboration
 
 (Keren and Yoav pair programmed everything they did for this project)
@@ -542,3 +544,5 @@ Carol, General Organizer: created Github repository and Colab notebook, helped c
 Larry, Coder/Writer: I coded a lot of the data exploration and some parts of preprocessing; I compiled everything to the requirements in the final writeup.
 
 Chia, Coder: Discussion with other teammates, Preprocessing Encoding code, Model 1 train-test analysis code based on adding features, Model 3 code for SVM model and train-test analysis
+
+Ammie, Coder/Writer: I wrote the code for a few sections in the preprocessing, I assisted in writing the code for testing the accuracies/plotting train and test error for our models as well as provided feedback. Wrote the conclusion for the write up and did checks for the files to make sure they run properly.
