@@ -590,8 +590,7 @@ Education Level Distribution: It seems that the highest counts are in education 
 Sex and Income Distribution: There is twice as many males as females in this dataset, meaning that males make up two-thirds of our data, which is a very significant bias. Also it seems that there are much more who make less than 50K compared to those who make more than 50K in our dataset. This could lead to some class imbalancing issues when we later run models for this dataset.
 
 ### Preprocessing
-
-Overall preprocessing our data to be used for machine learning models was a success
+Overall preprocessing our data to be used for machine learning models was a success. There were some decisions that we could have done differently for our preprocessing such as label vs. one-hot encoding. We felt that label encoding was better as many of our categorical features were ordinal data. We also thought that using MinMaxScaler was the best way to normalize our data since we did not have many outliers that would heavily affect the normalization according to our data exploration. 
 
 ### Model 1: Logistic Regression
 Our model is consistent throughout the testing and training predictions, and the log loss values are very close. We have high precision and recall for Class 0 (<=50K) but lower precision and significantly lower recall for Class 1 (>50K), likely due to the class imbalance (6000 samples for Class 0 but 2000 for Class 1).
