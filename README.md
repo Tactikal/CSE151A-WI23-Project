@@ -164,7 +164,7 @@ logreg = LogisticRegression(max_iter = 5000)
 logreg.fit(trainX, trainY)
 ```
 
-### Model 2: Logistic Regression
+### Model 2: Keras ANN
 ```
 # new split of train/test vars
 trainX_2, testX_2, trainY_2, testY_2 = train_test_split(X,y,test_size=0.2,random_state = 99)
@@ -199,10 +199,110 @@ classifier.compile(optimizer = 'sgd', loss = 'binary_crossentropy')
 history = classifier.fit(trainX_2.astype(int), trainY_2.astype(int), batch_size = 300, epochs = 100)
 ```
 
+For the Keras ANN model we also performed hyper-parameter tuning and K-fold cross validation to see if these methods would improve our model.
 
+```
+# We may reconstruct the original model but with hyperparameters
+!pip install keras_tuner -q
+import keras_tuner
+
+from keras.metrics import BinaryAccuracy, BinaryCrossentropy, Precision, Recall
+def build_model(hp):
+  # initialize ANN8
+  classifier = Sequential()
+  # input layer
+  classifier.add(Dense(units = hp.Int("units", min_value=8, max_value=64, step=2, default=8), activation = 'relu', input_dim = 12))
+
+  for i in range(2):
+    classifier.add(Dense(
+        units=hp.Int("units", min_value=4, max_value=64, step=2, default=4),
+        activation='relu'
+    ))
+
+  # hidden layers
+  # classifier.add(Dense(units = hp.Int("units", min_value=6, max_value=24, step=6), activation = 'relu'))
+  # classifier.add(Dense(units = hp.Int("units", min_value=4, max_value=20, step=5), activation = 'relu'))
+
+  # output layer
+  classifier.add(Dense(units = 1, activation = 'sigmoid'))
+
+  # takes a long time to train because of large dataset, change batch_size/epochs if necessary
+  # do smaller batch_size/larger epochs for final results to be submitted
+  classifier.compile(optimizer = 'sgd', loss = 'binary_crossentropy', metrics=['binary_accuracy'])
+  return classifier
+
+hp = keras_tuner.HyperParameters()
+hp.Int("units", min_value=4, max_value=64)
+tuner = keras_tuner.RandomSearch(
+    hypermodel=build_model,
+    # hyperparameters=keras_tuner.HyperParameters(),
+    objective="binary_accuracy",
+    max_trials=5,
+    executions_per_trial=2,
+    tune_new_entries=True,
+    allow_new_entries=True,
+    seed=15,
+    overwrite=True,
+    directory="model_2_randomsearch_tuning",
+    project_name="151a_milestone_2"
+)
+tuner.search(trainX_2.astype(int), trainY_2.astype(int), epochs=2)
+best_models_2 = tuner.get_best_models(num_models=2)
+```
+
+```
+# K-fold Cross Validation
+trainX_2_noval, valX_2, trainY_2_noval, valY_2 = train_test_split(trainX_2, trainY_2, random_state=0)
+hp = keras_tuner.HyperParameters()
+hp.Int("units", min_value=4, max_value=64)
+tuner = keras_tuner.RandomSearch(
+    hypermodel=build_model,
+    # hyperparameters=keras_tuner.HyperParameters(),
+    objective="binary_accuracy",
+    max_trials=5,
+    executions_per_trial=2,
+    tune_new_entries=True,
+    allow_new_entries=True,
+    seed=15,
+    overwrite=True,
+    directory="model_2_randomsearch_tuning_kfold",
+    project_name="151a_milestone_2"
+)
+tuner.search(trainX_2.astype(int), trainY_2.astype(int), epochs=2, validation_data=(valX_2.astype(int), valY_2.astype(int)))
+best_models_2_val = tuner.get_best_models()
+```
+
+## Model 3: SVM
+```
+from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE
+from sklearn.svm import SVC
+
+# split
+trainX_3, testX_3, trainY_3, testY_3 = train_test_split(X, y, test_size=0.2, random_state=48)
+
+# class weights to weigh more heavily on the minority class
+# class_0_weight = y[y == 0].shape[0] / y.shape[0]
+# class_1_weight = y[y == 1].shape[0] / y.shape[0]
+class_0_weight = y.loc[y['income'] == 0].shape[0] / y.shape[0]
+class_1_weight = y.loc[y['income'] == 1].shape[0] / y.shape[0]
+class_weights = {0: class_0_weight, 1: class_1_weight}
+
+# over sampling the minority class
+# smote = SMOTE(sampling_strategy='minority', random_state=48)
+# trainX_3_smote, trainY_3_smote = smote.fit_resample(trainX_3, trainY_3)
+
+# rbf kernal for our svm and fitting
+svm_model = SVC(kernel='rbf', class_weight=class_weights, random_state=48)
+#svm_model.fit(trainX_3_smote, trainY_3_smote)
+svm_model.fit(trainX_3, trainY_3)
+
+# prediction time
+predictions = svm_model.predict(testX_3)
+```
 
 ## Results
-We decided to print a classification report and the log-loss of both our training and test data to evaluate each of our models. We will also display a training/test error graph over the number of features.
+We decided to print a classification report and the log-loss of both our training and test data to evaluate each of our models. We also displayed a training/test error graph over the number of features.
 ### Model 1: Logistic Regression
 ```
 # Make your bets
@@ -254,7 +354,7 @@ plt.show()
 ```
 ![model1tt](images/model1tt.png)
 
-### Model 2: Logistic Regression
+### Model 2: Keras ANN
 ```
 y_pred_prob = classifier.predict(np.asarray(testX_2).astype(np.float32))
 y_pred = (y_pred_prob > 0.5).astype(int)
@@ -305,6 +405,109 @@ plt.show()
 ```
 ![model2tt](images/model2tt.png)
 
+This is the classification report and error graph after performing hyper-parameter tuning and cross-validation:
+```
+y_pred_prob = classifier.predict(np.asarray(testX_2).astype(np.float32))
+y_pred = (y_pred_prob > 0.5).astype(int)
+y_pred_flat = y_pred.ravel()
+
+print("Testing:")
+print(classification_report(testY_2, y_pred_flat))
+
+y_pred_prob = classifier.predict(np.asarray(trainX_2).astype(np.float32))
+y_pred = (y_pred_prob > 0.5).astype(int)
+y_pred_flat = y_pred.ravel()
+
+print("Training:")
+print(classification_report(trainY_2, y_pred_flat))
+```
+![model2.1crtest](images/model2.1crtest.png)
+![model2.1crtrain](images/model2.1crtrain.png)
+
+```
+log_loss_test = log_loss(testY_2, (classifier.predict(np.asarray(testX_2).astype(np.float32)) > 0.5).astype(int))
+log_loss_train = log_loss(trainY_2, (classifier.predict(np.asarray(trainX_2).astype(np.float32)) > 0.5).astype(int))
+
+print(log_loss_test)
+print(log_loss_train)
+```
+![model2.1ll](images/model2.1ll.png)
+
+```
+train_losses = []
+test_losses = []
+features = range(1, X.shape[1]+1)
+trainY_array = np.asarray(trainY_2).astype(int)
+testY_array = np.asarray(testY_2).astype(int)
+for num_features in features:
+    classifier.fit(trainX_2.astype(int), trainY_array.astype(int), batch_size = 5000, epochs = 10, verbose = 0)
+    train_loss = log_loss(trainY_array, classifier.predict(trainX_2.astype(int)))
+    test_loss = log_loss(testY_array, classifier.predict(testX_2.astype(int)))
+    train_losses.append(train_loss)
+    test_losses.append(test_loss)
+
+plt.figure(figsize=(12, 6))
+plt.plot(features, train_losses, label='Train Error')
+plt.plot(features, test_losses, label='Test Error')
+plt.xlabel('Features')
+plt.ylabel('Error (Log Loss)')
+plt.title('Error per Number of Features')
+plt.legend()
+plt.show()
+```
+![model2.1tt](images/model2.1tt.png)
+
+### Model 3: SVM
+```
+yhat_test = svm_model.predict(testX_3)
+yhat_train = svm_model.predict(trainX_3)
+
+# 0 is <=50K
+# 1 is >50K
+from sklearn.metrics import classification_report, confusion_matrix
+print("Testing:")
+print(classification_report(testY, yhat_test))
+print("Training:")
+print(classification_report(trainY, yhat_train))
+```
+![model3cr](images/model3cr.png)
+
+```
+from sklearn.metrics import hinge_loss
+train_hinge_loss = hinge_loss(trainY_3, svm_model.decision_function(trainX_3))
+test_hinge_loss = hinge_loss(testY_3, svm_model.decision_function(testX_3))
+print("Training:")
+print(train_hinge_loss)
+print("Testing:")
+print(test_hinge_loss)
+```
+![model3ll](images/model3ll.png)
+
+```
+train_losses = []
+test_losses = []
+features = range(1, X.shape[1]+1)
+trainY_array = np.array(trainY_3).flatten()
+testY_array = np.array(testY_3).flatten()
+for num_features in features:
+    svm_temp = SVC(kernel='rbf', class_weight=class_weights, random_state=48)
+    svm_temp.fit(trainX_3.iloc[:, :num_features], trainY_array)
+    train_loss = hinge_loss(trainY_array, svm_temp.decision_function(trainX_3.iloc[:, :num_features]))
+    test_loss = hinge_loss(testY_array, svm_temp.decision_function(testX_3.iloc[:, :num_features]))
+    train_losses.append(train_loss)
+    test_losses.append(test_loss)
+
+plt.figure(figsize=(12, 6))
+plt.plot(features, train_losses, label='Train Error')
+plt.plot(features, test_losses, label='Test Error')
+plt.xlabel('Features')
+plt.ylabel('Error (Hinge Loss)')
+plt.title('Error per Number of Features')
+plt.legend()
+plt.show()
+```
+![model3ll](images/model3tt.png)
+
 ## Discussion
 
 ### Model 1: Logistic Regression
@@ -315,7 +518,7 @@ For our next 2 models, we are thinking of using SVM classification to classify w
 
 We can conclude that our first model has a high accuracy rate for predicting if someone makes less than or equal to 50k, but is much weaker for predicting if they make more than 50k. This was because there was less data for those making over 50k, which led to worse predictions. For future models, we may try making adjustments to the data to reduce the impact of the unbalanced data, or using models that perform relatively well regardless of the number of input entries. We could also perform multiple training runs exclusively on the entries that have income over 50k, to make sure that the model gets to work with it more.
 
-### Model 2: Logistic Regression
+### Model 2: Keras ANN
 We saw a slight increase in accuracy from our first model, with greatly increased precision and recall for Class 1. Similarly to the first model, it would fit within the ideal range for model complexity due to the fact that there is a small difference between train and test errors. However, it may lean more towards overfitting since the test error appears to be a bit higher than that of the train error.
 
 We performed cross validation and hyperparameter tuning. Grid search seems to have created a stable model that has similar levels of test and train error regardless of number of features. However, the training and testing error are both at least above 0.4. More information needs to be uncovered before we can come to a conclusion on what is good. We will do K-fold cross-validation next.
@@ -327,3 +530,15 @@ In conclusion, we did not find significant improvements by using a neural networ
 ## Conclusion
 
 ## Collaboration
+
+(Keren and Yoav pair programmed everything they did for this project)
+
+Keren, Coder/Writer: Described every feature in the dataset before the group started working on it, proposed a list of datasets in the beginning of the class and summarized everyone's suggestions, changed one-hot encoding to label encoding, set X to be standardized with the pre-existing function, not normalized, trained the logistic regression model on the data and compared its testing and training data, analyzed its location on the fitting graph (for model 1), added oversampling to the SVM (for model 3)
+
+Yoav, Coder/Writer:  Described every feature in the dataset before the group started working on it, encoded y to be 0 if <=50K and 1 if >50K (for model 1), Hyperparameter tuning, training with validation data, evaluation of overfitting, conclusion section, listed a bunch of future models & reasoning why, as well as a suggestion for the next model (for model 2), conclusion section (for model 3)
+
+Carol, General Organizer: created Github repository and Colab notebook, helped check in with group members to ensure timely completion of milestones, completed some coding and analysis/conclusion cells, often updated readme in Github
+
+Larry, Coder/Writer: I coded a lot of the data exploration and some parts of preprocessing; I compiled everything to the requirements in the final writeup.
+
+Chia, Coder: Discussion with other teammates, Preprocessing Encoding code, Model 1 train-test analysis code based on adding features, Model 3 code for SVM model and train-test analysis
