@@ -20,29 +20,63 @@ Figures will be mainly shown in the data exploration part of our writeup as well
 ## Methods
 
 ### Data Exploration
-We first wanted to look at the distribution of our data with figures. For example, here is a histogram of the age distribution of our data:
+We used Seaborn to visualize our data. Specifically, we used a pairplot and histograms of many different variables to visualize the distributions of our data more clearly.
 
-![age distribution](images/age.png)
+```
+# Visualize the data
 
-Looking at the figure, we see that the age distribution skews left with the mode being at mid-40s, with a sharp dropdown of people at above age 50. This means that we have a majority younger database in terms of age.
+# Important note:
+# Run imputation and then transformation before data visualization! This is so
+# we don't map null values, we don't categorize null values, and don't
+# map unnecessary columns
 
-Next we wanted to see the distribution of how many hours per week were worked:
+sns.pairplot(X)
 
-![hpw distribution](images/hoursperweek.png)
+sns.histplot(X['age'], bins=10);
+plt.title('Age Distribution')
+plt.show()
 
-This graph shows that the vast majority of people work 30-40 hour weeks since this unimodal distribution has an extremely massive spike, with the mode representing 25,000 people while every other bar represents less than 5,000 people.
+education_mapping = {
+    1: 'Preschool',
+    2: '1st-4th',
+    3: '5th-6th',
+    4: '7th-8th',
+    5: '9th',
+    6: '10th',
+    7: '11th',
+    8: '12th',
+    9: 'HS-grad',
+    10: 'Some-college',
+    11: 'Assoc-voc',
+    12: 'Assoc-acdm',
+    13: 'Bachelors',
+    14: 'Masters',
+    15: 'Prof-school',
+    16: 'Doctorate'
+}
+sns.countplot(x='education-num', data=X);
+legend_handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='b', markersize=10)]
+legend_labels = ['Education Level']
+for num, edu in education_mapping.items():
+    legend_handles.append(plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='b', markersize=10))
+    legend_labels.append(f"{num}: {edu}")
 
-We also wanted to see the education level of our dataset, so we graphed a histogram of education level vs. number of people:
+plt.legend(legend_handles, legend_labels, bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.title('Education Level Distribution')
+plt.show()
 
-![edu lvl](images/educationlevel.png)
+sns.histplot(X['hours-per-week'], bins=10);
+plt.title('Hours Distribution')
+plt.show()
 
-It seems that the highest counts are in education levels 9, 10, 13, which represents high school grad, some college level, and bachelors respectively. These three education levels should make sense as the most common education levels as we have a relatively young age dataset.
+sns.countplot(x='sex', data=X);
+plt.title('Sex Distribution')
+plt.show()
 
-We also wanted to analyze distributions of other variables, such as sex and income:
-![sexdist](images/sex.png)
-![incomedist](images/income.png)
-
-There is twice as many males as females in this dataset, meaning that males make up two-thirds of our data, which is a very significant bias. Also it seems that there are much more who make less than 50K compared to those who make more than 50K in our dataset. This could lead to some class imbalancing issues when we later run models for this dataset.
+sns.countplot(x='income', data=y);
+plt.title('Income Distribution')
+plt.show()
+```
 
 ### Preprocessing
 To preprocess our data, we begun with imputation to remove meaningless or null entries. We had to store the missing row numbers into an array and also remove those data points on our target variable 'y' to keep the data shapes the same.
@@ -281,8 +315,7 @@ tuner.search(trainX_2.astype(int), trainY_2.astype(int), epochs=2, validation_da
 best_models_2_val = tuner.get_best_models()
 ```
 
-## Model 3: SVM
-We initialized another data split (test size 20%, random state 48) and we calculated class weights directly from the dataset to feed to the SVM. These weights were then applied to the class_weight parameter of the SVM model to give higher priority to the minority class during training. An RBF kernel was chosen for the SVM, and then we trained the model on the training set using the class weights and a random state of 48.
+### Model 3: SVM
 ```
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
@@ -312,6 +345,32 @@ predictions = svm_model.predict(testX_3)
 ```
 
 ## Results
+
+### Data Exploration
+(Pairplot is too big to be screenshotted, please check our jupyter notebook to see pairplot)
+
+We first wanted to look at the distribution of our data with figures. For example, here is a histogram of the age distribution of our data:
+
+![age distribution](images/age.png)
+
+Next we wanted to see the distribution of how many hours per week were worked:
+
+![hpw distribution](images/hoursperweek.png)
+
+We also wanted to see the education level of our dataset, so we graphed a histogram of education level vs. number of people:
+
+![edu lvl](images/educationlevel.png)
+
+We also wanted to analyze distributions of other variables, such as sex and income:
+![sexdist](images/sex.png)
+![incomedist](images/income.png)
+
+### Preprocessing
+
+After imputation, transformation, normalizing and encoding data, here is a subsample of our data:
+
+![preprocessed](images/preprocessed.png)
+
 We decided to print a classification report and the log-loss of both our training and test data to evaluate each of our models. We also displayed a training/test error graph over the number of features.
 ### Model 1: Logistic Regression
 ```
@@ -520,13 +579,27 @@ plt.show()
 
 ## Discussion
 
+### Data Exploration
+
+Age Distribution: Looking at the figure, we see that the age distribution skews left with the mode being at mid-40s, with a sharp dropdown of people at above age 50. This means that we have a majority younger database in terms of age.
+
+Hours Per Week Distribution: This graph shows that the vast majority of people work 30-40 hour weeks since this unimodal distribution has an extremely massive spike, with the mode representing 25,000 people while every other bar represents less than 5,000 people.
+
+Education Level Distribution: It seems that the highest counts are in education levels 9, 10, 13, which represents high school grad, some college level, and bachelors respectively. These three education levels should make sense as the most common education levels as we have a relatively young age dataset.
+
+Sex and Income Distribution: There is twice as many males as females in this dataset, meaning that males make up two-thirds of our data, which is a very significant bias. Also it seems that there are much more who make less than 50K compared to those who make more than 50K in our dataset. This could lead to some class imbalancing issues when we later run models for this dataset.
+
+### Preprocessing
+
+Overall preprocessing our data to be used for machine learning models was a success
+
 ### Model 1: Logistic Regression
 Our model is consistent throughout the testing and training predictions, and the log loss values are very close. We have high precision and recall for Class 0 (<=50K) but lower precision and significantly lower recall for Class 1 (>50K), likely due to the class imbalance (6000 samples for Class 0 but 2000 for Class 1).
 The model is well fit with good generalization, but definitely could benefit from reducing the amount of samples for class 0. We think that it might fit within the ideal range for model complexity, as errors on both test data and train data are low.
 
-For our next 2 models, we are thinking of using SVM classification to classify who gets what income. We plan on using SVM classification specifically because it is very useful in binary classification and, more importantly, there are methods for us to able to penalize misclassification of the minority class. Additionally, for our second model, we can use a Keras ANN since those are often used to perform prediction / classification tasks with high effectiveness.
-
 We can conclude that our first model has a high accuracy rate for predicting if someone makes less than or equal to 50k, but is much weaker for predicting if they make more than 50k. This was because there was less data for those making over 50k, which led to worse predictions. For future models, we may try making adjustments to the data to reduce the impact of the unbalanced data, or using models that perform relatively well regardless of the number of input entries. We could also perform multiple training runs exclusively on the entries that have income over 50k, to make sure that the model gets to work with it more.
+
+For our next 2 models, we are thinking of using SVM classification to classify who gets what income. We plan on using SVM classification specifically because it is very useful in binary classification and, more importantly, there are methods for us to able to penalize misclassification of the minority class. Additionally, for our second model, we can use a Keras ANN since those are often used to perform prediction / classification tasks with high effectiveness.
 
 ### Model 2: Keras ANN
 We saw a slight increase in accuracy from our first model, with greatly increased precision and recall for Class 1. Similarly to the first model, it would fit within the ideal range for model complexity due to the fact that there is a small difference between train and test errors. However, it may lean more towards overfitting since the test error appears to be a bit higher than that of the train error.
@@ -536,6 +609,9 @@ We performed cross validation and hyperparameter tuning. Grid search seems to ha
 To figure out what features might be most important, we could use decision trees. Overfitting seems like an issue, however, so careful planning would need to be done. Naive Bayes is not likely to be a good idea because most of the features are likely not independent. If we use it to figure out which features correlate with the target, we would have to carefully choose only the most independent features. We could still try it, but we expect bad results. We are also interested in K-Nearest Neighbors classification because of the unsupervised nature of the approach. It seems useful for exploration because it makes less assumptions about the data. We might be able to use it to lead up to other forms of classification, or as an additional verification measure for decision tree learning. Finally, we are interested in SVM classification for the simple nature of the model. We expect to achieve relatively quick results using it with some polynomial transformations. In the end, we may use all of these methods (minus Naive Bayes) and take an average, using majority vote to generalize the model. Some models might be better for some features, and we could leverage it for much benefit.
 
 In conclusion, we did not find significant improvements by using a neural network. We found good accuracy, but significant overfitting. We believe neither model is truly sufficient, so we would like to try several others.
+
+### Model 3: SVM
+We tried SVM with class weights, SVM with over sampling, and both. We kept the version without oversampling and only class weights since it seemed to perform the best. Overall, SVM did not perform well on our data set with a best accuracy of 75% (f-score). This makes it seem like there is no cutoff clear enough for SVM in the data. Our neural network model, the second model, has been our best so far. Further improvements could be attempted using PCA to classify.
 
 ## Conclusion
 
@@ -551,7 +627,7 @@ Yoav, Coder/Writer: Described every feature in the dataset before the group star
 
 Carol, General Organizer: created Github repository and Colab notebook, helped check in with group members to ensure timely completion of milestones, completed some coding and analysis/conclusion cells, often updated readme in Github
 
-Larry, Coder/Writer: I coded a lot of the data exploration and some parts of preprocessing; I compiled everything to the requirements in the final writeup.
+Larry, Coder/Writer: I wrote code to imput null/NaN data for data preprocessing and coded all of the figures that show distributions of variables in our dataset; I compiled everything to the requirements in the final writeup except the conclusion.
 
 Chia, Coder: Discussion with other teammates, Preprocessing Encoding code, Model 1 train-test analysis code based on adding features, Model 3 code for SVM model and train-test analysis
 
