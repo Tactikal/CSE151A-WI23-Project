@@ -147,7 +147,11 @@ X = X_label
 y['income'] = y['income'].map({'>50K': 1, '<=50K': 0})
 ```
 
+
 ### Model 1: Logistic Regression
+
+We first split the data set into training and testing sets using a 20% test size and a random state of 21. Then, we instantiated the logistic regression model with a maximum iteration parameter set to 5000 and fit it to the training data.
+
 ```
 trainX, testX, trainY, testY = train_test_split(X,y,test_size=0.2,random_state = 21)
 
@@ -165,6 +169,11 @@ logreg.fit(trainX, trainY)
 ```
 
 ### Model 2: Keras ANN
+
+First, we got a new split of the data with a 20% test size and a random state of 99. Then, using Keras, we initialized a Sequential model and configured it with one input layer, multiple hidden layers, and one output layer. The input layer was set to have 512 units and had 12 inputs to match the features. Every hidden layer had it's units cut down by 2 until we reached the 1 unit output layer, which uses a sigmoid activation function for binary classification. We compiled the model with the Stochastic Gradient Descent ('sgd' in the model compilation code) optimizer and binary crossentropy for loss function. Then, we fit it to the training data.
+
+Additionally, hyperparameter tuning was done using Keras Tuner to find the optimal units in the dense layers (search range from 4 to 64 units) to find the optimal model configuration for accuracy. K-fold cross-validation was also implemented to make sure we did not overfit.
+
 ```
 # new split of train/test vars
 trainX_2, testX_2, trainY_2, testY_2 = train_test_split(X,y,test_size=0.2,random_state = 99)
@@ -273,6 +282,7 @@ best_models_2_val = tuner.get_best_models()
 ```
 
 ## Model 3: SVM
+We initialized another data split (test size 20%, random state 48) and we calculated class weights directly from the dataset to feed to the SVM. These weights were then applied to the class_weight parameter of the SVM model to give higher priority to the minority class during training. An RBF kernel was chosen for the SVM, and then we trained the model on the training set using the class weights and a random state of 48.
 ```
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
@@ -535,9 +545,9 @@ Overall, we achieved fairly decent accuracy with all three of our models. We uti
 
 (Keren and Yoav pair programmed everything they did for this project)
 
-Keren, Coder/Writer: Described every feature in the dataset before the group started working on it, proposed a list of datasets in the beginning of the class and summarized everyone's suggestions, changed one-hot encoding to label encoding, set X to be standardized with the pre-existing function, not normalized, trained the logistic regression model on the data and compared its testing and training data, analyzed its location on the fitting graph (for model 1), added oversampling to the SVM (for model 3)
+Keren, Coder/Writer: Wrote the description for every feature in the dataset during the preprocessing phase with Yoav, proposed a list of datasets in the beginning of the class and summarized everyone's suggestions. For model 1, changed one-hot encoding to label encoding, set X to be standardized with the pre-existing function (not normalized), trained the logistic regression model on the data and compared its testing and training data, analyzed its location on the fitting graph. Added oversampling to the SVM (for model 3).
 
-Yoav, Coder/Writer:  Described every feature in the dataset before the group started working on it, encoded y to be 0 if <=50K and 1 if >50K (for model 1), Hyperparameter tuning, training with validation data, evaluation of overfitting, conclusion section, listed a bunch of future models & reasoning why, as well as a suggestion for the next model (for model 2), conclusion section (for model 3)
+Yoav, Coder/Writer: Described every feature in the dataset before the group started working on it in the preprocessing phase with Keren, encoded y to be 0 if <=50K and 1 if >50K (for model 1). For model 2, hyperparameter tuning, training with validation data, evaluation of overfitting, conclusion section, listed a bunch of future models & reasoning why, and suggested several options for next model. For model 3, conclusion section.
 
 Carol, General Organizer: created Github repository and Colab notebook, helped check in with group members to ensure timely completion of milestones, completed some coding and analysis/conclusion cells, often updated readme in Github
 
