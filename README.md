@@ -206,7 +206,7 @@ logreg.fit(trainX, trainY)
 
 First, we got a new split of the data with a 20% test size and a random state of 99. Then, using Keras, we initialized a Sequential model and configured it with one input layer, multiple hidden layers, and one output layer. The input layer was set to have 512 units and had 12 inputs to match the features. Every hidden layer had it's units cut down by 2 until we reached the 1 unit output layer, which uses a sigmoid activation function for binary classification. We compiled the model with the Stochastic Gradient Descent ('sgd' in the model compilation code) optimizer and binary crossentropy for loss function. Then, we fit it to the training data.
 
-Additionally, hyperparameter tuning was done using Keras Tuner to find the optimal units in the dense layers (search range from 4 to 64 units) to find the optimal model configuration for accuracy. K-fold cross-validation was also implemented to make sure we did not overfit.
+Additionally, hyperparameter tuning was done using Keras Tuner to find the optimal units in the dense layers (search range from 4 to 64 units). K-fold cross-validation was also implemented to make sure we did not overfit.
 
 ```
 # new split of train/test vars
